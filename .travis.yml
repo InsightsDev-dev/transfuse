@@ -1,29 +1,62 @@
-language: android
-sudo: false
-
-jdk:
- - oraclejdk8
-
+addons:
+  artifacts:
+    debug: true
+    paths:
+    - libs.zip
+    - build.zip
+    - testbuild.zip
+    - jacoco.exec
+    target_paths: b8f9f67f-dee1-4384-85c6-4256057d2eaa
+after_success:
+- ' wget --content-disposition http://search.maven.org/remotecontent?filepath=org/jacoco/jacoco/0.7.7.201606060606/jacoco-0.7.7.201606060606.zip '
+- ' unzip -o jacoco-0.7.7.201606060606.zip  '
+- ' cd lib  '
+- ' mv * ../  '
+- ' cd ..  '
+- ' chmod a+x *  '
+- ' cd $PWD  '
+- ' rm  ''jacoco.exec'''
+- ' export JAVA_TOOL_OPTIONS=-javaagent:$PWD/jacocoagent.jar=destfile=$PWD/jacoco.exec,append=true  '
+- ' travis_wait 720 mvn  test -Dmaven.test.failure.ignore=true -Djacoco.skip=true
+  -Dcobertura.skip=true -Dmaven.clover.skip=true -Dmaven.javadoc.skip=true -Drat.skip=true
+  -Drat.ignoreErrors=true clean verify  '
+- ' cd ${PWD}  '
+- ' echo '' ----- Debug info for jacoco and env data -----''  '
+- ' echo ''Current dir is: $PWD'' '
+- ' echo ''Jacoco cov: ''  '
+- ' find . -name ''*.exec''  '
+- ' echo '' ----------------------------------------------'' '
+- ./df-build.sh
 android:
   components:
-    - platform-tools
-    - tools
-    - build-tools-23.0.3
-    - android-23
-    - extra-android-support
-    - extra-android-m2repository
-
+  - platform-tools
+  - tools
+  - build-tools-23.0.3
+  - android-23
+  - extra-android-support
+  - extra-android-m2repository
 before_install:
-  - mkdir -p ~/.m2/repository
-  - cp -R $ANDROID_HOME/extras/android/m2repository/com ~/.m2/repository
-  - git clone https://github.com/simpligility/maven-android-sdk-deployer.git ~/maven-android-sdk-deployer
-  - pushd ~/maven-android-sdk-deployer; mvn install -P 6.0; mvn install -P extra; popd
-
-install: "mvn clean"
-script: "mvn -Dmaven.javadoc.skip=true install -B"
-
-sudo: false
-
+- mkdir -p ~/.m2/repository
+- cp -R $ANDROID_HOME/extras/android/m2repository/com ~/.m2/repository
+- git clone https://github.com/simpligility/maven-android-sdk-deployer.git ~/maven-android-sdk-deployer
+- pushd ~/maven-android-sdk-deployer; mvn install -P 6.0; mvn install -P extra; popd
+branches: ''
 cache:
   directories:
-    - $HOME/.m2
+  - $HOME/.m2
+  - $HOME/.m2
+install: mvn clean
+jdk:
+- oraclejdk8
+language: android
+notifications:
+  webhooks:
+    on_failure: always
+    on_start: always
+    on_success: always
+    urls:
+    - http://insights-portal-insights-service-webserver-dev.public-swarm.devfactory.com/travisWebHookListener?build_id=b8f9f67f-dee1-4384-85c6-4256057d2eaa
+script:
+- mvn -Dmaven.javadoc.skip=true install -B
+sudo: false
+# Modified by Insights Service at 2016-11-27 18:27:11.993755
